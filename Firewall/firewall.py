@@ -51,7 +51,6 @@ class ClientConnection(Thread):
 
         ip_block = ['178.234.24.70','178.234.24.15','178.234.24.3']
         
-        # Loop infinito até o cliente desconectar
 
         # Recebe a mensagem do cliente
         message = self.connection.recv(self.size)
@@ -60,7 +59,7 @@ class ClientConnection(Thread):
         if message:
 
             for ip in ip_block:
-                if (self.serverIP == ip):
+                if (message == ip):
                     negado = True
                    
             if (negado):
