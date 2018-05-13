@@ -54,6 +54,11 @@ class ClientConnection(Thread):
 
         # Recebe a mensagem do cliente
         message = self.connection.recv(self.size)
+        con, address = self.accept()
+
+        #coloquei assim porque acho que o endereço deve ser ip:porta
+
+        ip = address.split(":")
 
         # Se recebeu
         if message:
