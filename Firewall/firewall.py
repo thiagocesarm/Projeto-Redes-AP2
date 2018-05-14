@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import socket
 from threading import Thread
+from datetime import datetime
 import sys
 
 # cliente -> firewall -> proxy -> servidor
@@ -50,17 +51,38 @@ class ClientConnection(Thread):
         self.size = size
 
     def run(self):
+
+
         # Ips de exemplo que serão bloqueados pelo servidor por serem maliciosos
 
         ip_block = ['178.234.24.70','178.234.24.15','178.234.24.3']
 
+        # horas de exemplo em que o servidor não pode ser acessado
+
+        horas_proibidas = ['21', '23', '12']
+
+        clientes_conectados = {}
+
+        clientes_bloqueados = {}
+
+
+
+
         while True:
+
+            now = datetime.now()
+
             # Recebe a mensagem do cliente
             message = self.connection.recv(self.size)
 
-            #coloquei assim porque acho que o endereço deve ser ip:porta
-
             clientIp = self.address[0]
+
+            hora_conexao = str(now).split(" ")[1]
+
+
+
+            clientes_conectados[self.address[0]] = []
+            clientes_conectados[self.address[0]].append(hora_conexao)
 
             # Se recebeu
             if message:
@@ -75,6 +97,27 @@ class ClientConnection(Thread):
                     self.connection.close()
 
                 else:
+
+                    for item in clientes_conectados:
+
+                        horas = []
+                        minutos = []
+                        segundos[]
+
+                        for elemento in clientes_conectados[item]:
+
+                            hora = int(elemento.split(':')[0])
+                            minuto = int(elemento.split(':')[1])
+                            segundo = int(elemento.split(':')[2])
+
+                            horas.append(hora)
+                            minutos.append(minuto)
+                            segundos.append(segundo)
+
+                        
+                        for elemento in horas:
+                            if ()
+
                     # Repassa mensagem ao servidor (adicionar funcionalidade aqui)
                     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     serverSocket.connect((self.serverIP, self.serverPort))
