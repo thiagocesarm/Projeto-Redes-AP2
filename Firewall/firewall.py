@@ -3,13 +3,15 @@ import socket
 from threading import Thread
 import sys
 
+# cliente -> firewall -> proxy -> servidor
+
 # Serve como um servidor para o proxy, mantém as conexões vindas dos clientes
 class ClientListener:
     def __init__(self):
         self.ownIP = '127.0.0.1'
-        self.ownPort = 12345
+        self.ownPort = 11000
         self.serverIP = '127.0.0.1'
-        self.serverPort = 12346
+        self.serverPort = 11001
         self.size = 1024
         self.server = None
         self.connectedClients = []
@@ -27,18 +29,19 @@ class ClientListener:
     def start_listening(self):
         self.create_socket();
 
-        connection, address = self.server.accept()
-        newConnection = ClientConnection(connection,
-                                            address,
-                                            self.serverIP,
-                                            self.serverPort,
-                                            self.size)
-        newConnection.start()
-        self.connectedClients.append(c)
+        while True:
+            connection, address = self.server.accept()
+            newConnection = ClientConnection(connection,
+                                                address,
+                                                self.serverIP,
+                                                self.serverPort,
+                                                self.size)
+            newConnection.start()
+            self.connectedClients.append(newConnection)
 
 class ClientConnection(Thread):
     def __init__(self, connection, address, serverIP, serverPort, size):
-        print "Cliente conectado: " + connection + " | endereço: " + address
+        print "Cliente conectado: ", connection, " | endereço: ", address
         Thread.__init__(self)
         self.connection = connection
         self.address = address
@@ -50,40 +53,42 @@ class ClientConnection(Thread):
         # Ips de exemplo que serão bloqueados pelo servidor por serem maliciosos
 
         ip_block = ['178.234.24.70','178.234.24.15','178.234.24.3']
-        
 
-        # Recebe a mensagem do cliente
-        message = self.connection.recv(self.size)
-        con, address = self.accept()
+        while True:
+            # Recebe a mensagem do cliente
+            message = self.connection.recv(self.size)
 
-        #coloquei assim porque acho que o endereço deve ser ip:porta
+            #coloquei assim porque acho que o endereço deve ser ip:porta
 
-        ip = address.split(":")
+            # Corrigir
+            # ip = address.split(":")
 
-        # Se recebeu
-        if message:
+            # Se recebeu
+            if message:
+                negado = False
+                for ip in ip_block:
+                    if (message == ip):
+                        negado = True
+                       
+                if (negado):
+                    msg = "Sua requisição foi negada"
+                    self.connection.send(msg.encode())
+                    self.connection.close()
 
-            for ip in ip_block:
-                if (message == ip):
-                    negado = True
-                   
-            if (negado):
-                msg = "Sua requisição foi negada"
-                self.connection.send(msg.encode())
+                else:
+                    # Repassa mensagem ao servidor (adicionar funcionalidade aqui)
+                    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    serverSocket.connect((self.serverIP, self.serverPort))
+                    serverSocket.sendall(message)
 
+                    # Recebe resposta do servidor e repassa ao usuario
+                    response = serverSocket.recv(self.size)
+                    self.connection.sendall(response)
+
+            # Se não recebeu cancela a conexão
             else:
-                # Repassa mensagem ao servidor (adicionar funcionalidade aqui)
-                serverSocket = socket.socket(socket.AF_INET, SOCK_STREAM)
-                serverSocket.connect((self.serverIP, self.serverPort))
-                serverSocket.sendall(message)
-
-                # Recebe resposta do servidor e repassa ao usuario
-                response = serverSocket.recv(self.size)
-                self.connection.sendall(self.size)
-
-                # Se não recebeu cancela a conexão
-        else:
-            self.connection.close()
+                self.connection.close()
+                break
 
 if __name__ == "__main__":
     s = ClientListener()

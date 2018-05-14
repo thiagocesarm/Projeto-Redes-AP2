@@ -7,19 +7,20 @@ import sys
 class ClientListener:
 	def __init__(self):
 		self.ownIP = '127.0.0.1'
-		self.ownPort = 12345
+		self.ownPort = 11001
 		self.serverIP = '127.0.0.1'
-		self.serverPort = 12346
+		self.serverPort = 11002
 		self.size = 1024
 		self.server = None
 		self.connectedClients = []
+		self.listen = 10
 
 	def create_socket(self):
 		try:
 			print "Criando socket..."
 			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.server.bind((self.ownIP, self.ownPort))
-			self.server.listen()
+			self.server.listen(self.listen)
 		except socket.error, (value, message):
 			print "Erro de socket: " + message
 			sys.exit(1)
@@ -27,20 +28,15 @@ class ClientListener:
 	def start_listening(self):
 		self.create_socket();
 
-        run = 1
-        while run:
-            connection, address = self.server.accept()
-            newConnection = ClientConnection(connection,
-            								 address,
-            								 self.serverIP,
-            								 self.serverPort,
-            								 self.size)
-            newConnection.start()
-            self.connectedClients.append(c)
+		while True:
+			connection, address = self.server.accept()
+			newConnection = ClientConnection(connection, address, self.serverIP, self.serverPort, self.size)
+			newConnection.start()
+			self.connectedClients.append(newConnection)
 
 class ClientConnection(Thread):
 	def __init__(self, connection, address, serverIP, serverPort, size):
-		print "Cliente conectado: " + connection + " | endereço: " + address
+		print "Cliente conectado: ", connection, " | endereço: ", address
 		Thread.__init__(self)
 		self.connection = connection
 		self.address = address
@@ -57,13 +53,13 @@ class ClientConnection(Thread):
 			# Se recebeu
 			if message:
 				# Repassa mensagem ao servidor (adicionar funcionalidade aqui)
-				serverSocket = socket.socket(socket.AF_INET, SOCK_STREAM)
+				serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				serverSocket.connect((self.serverIP, self.serverPort))
 				serverSocket.sendall(message)
 
 				# Recebe resposta do servidor e repassa ao usuario
 				response = serverSocket.recv(self.size)
-				self.connection.sendall(self.size)
+				self.connection.sendall(response)
 
 			# Se não recebeu cancela a conexão
 			else:
