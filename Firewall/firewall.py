@@ -60,14 +60,13 @@ class ClientConnection(Thread):
 
             #coloquei assim porque acho que o endereço deve ser ip:porta
 
-            # Corrigir
-            # ip = address.split(":")
+            clientIp = self.address[0]
 
             # Se recebeu
             if message:
                 negado = False
                 for ip in ip_block:
-                    if (message == ip):
+                    if (clientIp == ip):
                         negado = True
                        
                 if (negado):
