@@ -98,6 +98,16 @@ class ClientConnection(Thread):
 
                 else:
 
+                    hora = int(elemento.split(':')[0])
+                    
+                    for h in horas_proibidas:
+                        if ( hora == h):
+                            msg = "Sua requisição foi negada"
+                            self.connection.send(msg.encode())
+                            self.connection.close()
+
+
+
                     for item in clientes_conectados:
 
                         horas = []
