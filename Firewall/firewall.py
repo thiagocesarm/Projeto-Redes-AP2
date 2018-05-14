@@ -115,17 +115,27 @@ class ClientConnection(Thread):
                             segundos.append(segundo)
 
                         
-                        for elemento in horas:
-                            if ()
+                        cont = 0; 
+                        for i in xrange(1,10):
+                            
+                            if((horas[i] == horas[i+1]) and (minutos[i] == minutos[i+1]) and ((i+1) <= 10)):
+                                cont++
+                        
+                        if (cont == 10):
+                            clientes_bloqueados[item] = str(now).split(" ")[1]
+                            msg = "Sua requisição foi negada"
+                            self.connection.send(msg.encode())
+                            self.connection.close()   
+                             
+                        else: 
+                            # Repassa mensagem ao servidor (adicionar funcionalidade aqui)
+                            serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            serverSocket.connect((self.serverIP, self.serverPort))
+                            serverSocket.sendall(message)
 
-                    # Repassa mensagem ao servidor (adicionar funcionalidade aqui)
-                    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    serverSocket.connect((self.serverIP, self.serverPort))
-                    serverSocket.sendall(message)
-
-                    # Recebe resposta do servidor e repassa ao usuario
-                    response = serverSocket.recv(self.size)
-                    self.connection.sendall(response)
+                            # Recebe resposta do servidor e repassa ao usuario
+                            response = serverSocket.recv(self.size)
+                            self.connection.sendall(response)
 
             # Se não recebeu cancela a conexão
             else:
