@@ -2,6 +2,7 @@
 import socket
 from threading import Thread
 import sys
+import urllib2
 
 # Serve como um servidor para o proxy, mantém as conexões vindas dos clientes
 class ClientListener:
@@ -52,14 +53,29 @@ class ClientConnection(Thread):
 
 			# Se recebeu
 			if message:
-				# Repassa mensagem ao servidor (adicionar funcionalidade aqui)
-				serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				serverSocket.connect((self.serverIP, self.serverPort))
-				serverSocket.sendall(message)
+				
+				json_data = json.loads(message)
+				service = json_data["service"]
+				
+				# Verifica o tipo em busca de uma requisição HTTP
+				if service == "http":
+					url = json_data["body"]
+					contents = urllib2.urlopen(url).read()
+					json_response = {
+						"type" : "response",
+						"service" : "http",
+						"body" : contents
+					}
+					self.connection.sendall(json.dumps(json_response))
+				else:
+					# Repassa mensagem ao servidor
+					serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+					serverSocket.connect((self.serverIP, self.serverPort))
+					serverSocket.sendall(message)
 
-				# Recebe resposta do servidor e repassa ao usuario
-				response = serverSocket.recv(self.size)
-				self.connection.sendall(response)
+					# Recebe resposta do servidor e repassa ao usuario
+					response = serverSocket.recv(self.size)
+					self.connection.sendall(response)
 
 			# Se não recebeu cancela a conexão
 			else:
