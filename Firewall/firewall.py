@@ -63,7 +63,7 @@ class FirewallServer:
                 if clientIp in self.clientes_bloqueados:
                     if (now - self.clientes_bloqueados[clientIp]).total_seconds() < 300:
                         negado = True
-                    else
+                    else:
                         # Se estiver bloqueado temporariamente a mais de 5 minutos, desbloqueia
                         del self.clientes_bloqueados[clientIp]
 
@@ -88,7 +88,7 @@ class FirewallServer:
 
             # Se não recebeu cancela a conexão
             else:
-                self.connection.close()
+                connection.close()
                 break
 
 if __name__ == "__main__":

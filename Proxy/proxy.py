@@ -10,6 +10,8 @@ import urllib2
 #              |v            
 # cliente -> proxy -> servidor
 
+firewallConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 # Serve como um servidor para o proxy, mantém as conexões vindas dos clientes
 class ClientListener:
 	def __init__(self):
@@ -23,7 +25,6 @@ class ClientListener:
 		self.server = None
 		self.listen = 10
 		self.connectedClients = []
-		self.firewallConnection = None
 
 	def create_socket(self):
 		try:
@@ -36,8 +37,7 @@ class ClientListener:
 			sys.exit(1)
 
 	def connect_to_firewall(self):
-		self.firewallConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.firewallConnection.connect((self.firewallIP, self.firewallPort))
+		firewallConnection.connect((self.firewallIP, self.firewallPort))
 
 	def start_listening(self):
 		self.create_socket()
@@ -67,9 +67,9 @@ class ClientConnection(Thread):
 
 			if clientMessage:
 				# Transmite a mensagem ao firewall
-				self.firewallConnection.sendall(clientMessage)
+				firewallConnection.sendall(clientMessage)
 				# Espera resposta do firewall
-				message = self.firewallConnection.recv(self.size)
+				message = firewallConnection.recv(self.size)
 
 				# Se recusado pelo firewall, retorne mensagem de conexão negado para o usuário
 				if message == "FORBIDDEN":
@@ -78,7 +78,7 @@ class ClientConnection(Thread):
 							"service" : "",
 							"body" : "Access denied! Connections on your IP was blocked by the firewall!"
 						}
-						self.connection.sendall(json.dumps(json_response))
+					self.connection.sendall(json.dumps(json_response))
 
 				# Se não recusado, continue
 				else:
@@ -99,7 +99,7 @@ class ClientConnection(Thread):
 						# Repassa mensagem ao servidor
 						serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 						serverSocket.connect((self.serverIP, self.serverPort))
-						serverSocket.sendall(message)
+						serverSocket.sendall(clientMessage)
 
 						# Recebe resposta do servidor e repassa ao usuario
 						response = serverSocket.recv(self.size)
