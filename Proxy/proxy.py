@@ -2,7 +2,13 @@
 import socket
 from threading import Thread
 import sys
+import json
 import urllib2
+
+#           Firewall
+#              ^
+#              |			
+# cliente -> proxy -> servidor
 
 # Serve como um servidor para o proxy, mantém as conexões vindas dos clientes
 class ClientListener:
@@ -11,10 +17,13 @@ class ClientListener:
 		self.ownPort = 11001
 		self.serverIP = '127.0.0.1'
 		self.serverPort = 11002
+		self.firewallIP = '127.0.0.1'
+		self.firewallPort = 11003
 		self.size = 1024
 		self.server = None
-		self.connectedClients = []
 		self.listen = 10
+		self.connectedClients = []
+		self.firewallConnection = None
 
 	def create_socket(self):
 		try:
@@ -26,8 +35,13 @@ class ClientListener:
 			print "Erro de socket: " + message
 			sys.exit(1)
 
+	def connect_to_firewall(self):
+		self.firewallConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.firewallConnection.connect((self.firewallIP, self.firewallPort))
+
 	def start_listening(self):
-		self.create_socket();
+		self.create_socket()
+		self.connect_to_firewall()
 
 		while True:
 			connection, address = self.server.accept()
@@ -49,11 +63,18 @@ class ClientConnection(Thread):
 		# Loop infinito até o cliente desconectar
 		while True:
 			# Recebe a mensagem do cliente
-			message = self.connection.recv(self.size)
+			clientMessage = self.connection.recv(self.size)
 
-			# Se recebeu
-			if message:
-				
+			if clientMessage:
+				# Transmite a mensagem ao firewall
+				self.firewallConnection.sendall(clientMessage)
+				# Espera resposta do firewall
+				message = self.firewallConnection.recv(self.size)
+
+				# Se recusado pelo firewall, retorne
+				# TODO
+
+				# Se não recusado, continue
 				json_data = json.loads(message)
 				service = json_data["service"]
 				
@@ -77,7 +98,7 @@ class ClientConnection(Thread):
 					response = serverSocket.recv(self.size)
 					self.connection.sendall(response)
 
-			# Se não recebeu cancela a conexão
+				# Se não recebeu cancela a conexão
 			else:
 				self.connection.close()
 				break

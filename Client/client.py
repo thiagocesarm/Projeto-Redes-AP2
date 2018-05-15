@@ -2,7 +2,10 @@
 import socket
 import json
 
-# cliente -> firewall -> proxy -> servidor
+#           Firewall
+#              ^
+#              |			
+# cliente -> proxy -> servidor
 
 HOST = '127.0.0.1'     # Server IP
 PORT = 11001           # Server port

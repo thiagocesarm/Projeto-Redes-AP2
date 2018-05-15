@@ -4,15 +4,16 @@ from threading import Thread
 from datetime import datetime
 import sys
 
-# cliente -> firewall -> proxy -> servidor
+#           Firewall
+#              ^
+#              |            
+# cliente -> proxy -> servidor
 
-# Serve como um servidor para o proxy, mantém as conexões vindas dos clientes
+# É um servidor que responde as requisições do proxy
 class ClientListener:
     def __init__(self):
         self.ownIP = '127.0.0.1'
-        self.ownPort = 11000
-        self.serverIP = '127.0.0.1'
-        self.serverPort = 11001
+        self.ownPort = 11003
         self.size = 1024
         self.server = None
         self.connectedClients = []
@@ -22,7 +23,7 @@ class ClientListener:
             print "Criando socket..."
             self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server.bind((self.ownIP, self.ownPort))
-            self.server.listen(2)
+            self.server.listen(10)
         except socket.error, (value, message):
             print "Erro de socket: " + message
             sys.exit(1)

@@ -1,6 +1,12 @@
+# -*- coding: utf-8 -*-
 import socket
 import json
 import datetime
+
+#           Firewall
+#              ^
+#              |            
+# cliente -> proxy -> servidor
 
 HOST = '127.0.0.1'              # Server IP
 PORT = 11002     		        # Server Port
