@@ -2,8 +2,6 @@ import socket
 import json
 import datetime
 
-now = datetime.datetime.now()
-
 HOST = '127.0.0.1'              # Server IP
 PORT = 11002     		        # Server Port
 SIZE = 1024            			# Buffer size
@@ -30,7 +28,7 @@ while True:
         service = json_data["service"]
 
         if service == "time":
-        	curr_date = now.strftime("%H:%M %d-%m-%Y")
+        	curr_date = datetime.datetime.now().strftime("%H:%M %d-%m-%Y")
         	json_response = {
         		"type" : "response",
         		"service" : "time",
