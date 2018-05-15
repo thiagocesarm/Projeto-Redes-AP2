@@ -67,6 +67,7 @@ class ClientConnection(Thread):
 
 
 
+        clientes_conectados[self.address[0]] = []
 
         while True:
 
@@ -81,7 +82,6 @@ class ClientConnection(Thread):
 
 
 
-            clientes_conectados[self.address[0]] = []
             clientes_conectados[self.address[0]].append(hora_conexao)
 
             # Se recebeu
@@ -91,7 +91,25 @@ class ClientConnection(Thread):
                     if (clientIp == ip):
                         negado = True
                        
+                bloqueado = False
+
+                for ip in clientes_bloqueados:
+
+                    hora = int(clientes_bloqueados[ip].split(':')[0])
+                    hora_agora = int(now.hour)
+                    minuto = int(clientes_bloqueados[ip].split(':')[1])
+                    minuto_agora = int(now.minute)
+                    
+                    if((clientIp == ip) and (minuto_agora < minuto + 5) and (hora == hora_agora)):
+                       bloqueado = True
+
                 if (negado):
+                    msg = "Sua requisição foi negada"
+                    self.connection.send(msg.encode())
+                    self.connection.close()
+
+                elif (bloqueado):
+                   
                     msg = "Sua requisição foi negada"
                     self.connection.send(msg.encode())
                     self.connection.close()
@@ -126,12 +144,12 @@ class ClientConnection(Thread):
 
                         
                         cont = 0; 
-                        for i in xrange(1,10):
+                        for i in xrange(0,len(horas)):
                             
-                            if((horas[i] == horas[i+1]) and (minutos[i] == minutos[i+1]) and ((i+1) <= 10)):
-                                cont++
+                            if((horas[i] == horas[i+1]) and (minutos[i] == minutos[i+1]) and ((i+1) <= len(horas))):
+                                cont++gg
                         
-                        if (cont == 10):
+                        if (cont >= 10):
                             clientes_bloqueados[item] = str(now).split(" ")[1]
                             msg = "Sua requisição foi negada"
                             self.connection.send(msg.encode())
