@@ -5,18 +5,25 @@ from datetime import datetime
 import sys
 
 #           Firewall
-#              ^
-#              |            
+#              ^|
+#              |v            
 # cliente -> proxy -> servidor
 
+# Ips de exemplo que serão bloqueados pelo servidor por serem maliciosos
+ip_block = ['178.234.24.70','178.234.24.15','178.234.24.3']
+
+# horas de exemplo em que o servidor não pode ser acessado
+horas_proibidas = [21, 23, 12]
+
 # É um servidor que responde as requisições do proxy
-class ClientListener:
+class FirewallServer:
     def __init__(self):
         self.ownIP = '127.0.0.1'
         self.ownPort = 11003
         self.size = 1024
         self.server = None
-        self.connectedClients = []
+        self.clientes_conectados = {}
+        self.clientes_bloqueados = {}
 
     def create_socket(self):
         try:
@@ -30,143 +37,54 @@ class ClientListener:
 
     def start_listening(self):
         self.create_socket();
+        connection, address = self.server.accept()
 
         while True:
-            connection, address = self.server.accept()
-            newConnection = ClientConnection(connection,
-                                                address,
-                                                self.serverIP,
-                                                self.serverPort,
-                                                self.size)
-            newConnection.start()
-            self.connectedClients.append(newConnection)
-
-class ClientConnection(Thread):
-    def __init__(self, connection, address, serverIP, serverPort, size):
-        print "Cliente conectado: ", connection, " | endereço: ", address
-        Thread.__init__(self)
-        self.connection = connection
-        self.address = address
-        self.serverIP = serverIP
-        self.serverPort = serverPort
-        self.size = size
-
-    def run(self):
-
-
-        # Ips de exemplo que serão bloqueados pelo servidor por serem maliciosos
-
-        ip_block = ['178.234.24.70','178.234.24.15','178.234.24.3']
-
-        # horas de exemplo em que o servidor não pode ser acessado
-
-        horas_proibidas = ['21', '23', '12']
-
-        clientes_conectados = {}
-
-        clientes_bloqueados = {}
-
-
-
-        clientes_conectados[self.address[0]] = []
-
-        while True:
-
-            now = datetime.now()
-
-            # Recebe a mensagem do cliente
-            message = self.connection.recv(self.size)
-
-            clientIp = self.address[0]
-
-            hora_conexao = str(now).split(" ")[1]
-
-
-
-            clientes_conectados[self.address[0]].append(hora_conexao)
+            # Recebe a mensagem do proxy
+            clientIp = connection.recv(self.size)
 
             # Se recebeu
-            if message:
+            if clientIp:
+                now = datetime.now()
+                hora_conexao = str(now).split(" ")[1]
+                hora_atual = int(hora_conexao.split(":")[0])
+
+                # Se não tiver se conectado antes, cria a entrada
+                if clientIp not in self.clientes_conectados:
+                    self.clientes_conectados[clientIp] = []
+                self.clientes_conectados[clientIp].append(now)
+
                 negado = False
-                for ip in ip_block:
-                    if (clientIp == ip):
+                # Se for um ip bloqueado ou horas proibidas
+                if (clientIp in ip_block) or (hora_atual in horas_proibidas):
+                    negado = True
+
+                # Se estiver bloqueado temporariamente a menos de 5 minutos
+                if clientIp in self.clientes_bloqueados:
+                    if (now - self.clientes_bloqueados[clientIp]).total_seconds() < 300:
                         negado = True
-                       
-                bloqueado = False
+                    else
+                        # Se estiver bloqueado temporariamente a mais de 5 minutos, desbloqueia
+                        del self.clientes_bloqueados[clientIp]
 
-                for ip in clientes_bloqueados:
+                # Se realizou 10 conexões nos últimos 5 segundos, bloqueia
+                numConnecs = 0
+                for timestamp in self.clientes_conectados[clientIp]:
+                    if ((now - timestamp).total_seconds() < 5):
+                        if (++numConnecs >= 10):
+                            break
+                if (numConnecs >= 10):
+                    self.clientes_bloqueados[clientIp] = now
+                    negado = True
 
-                    hora = int(clientes_bloqueados[ip].split(':')[0])
-                    hora_agora = int(now.hour)
-                    minuto = int(clientes_bloqueados[ip].split(':')[1])
-                    minuto_agora = int(now.minute)
-                    
-                    if((clientIp == ip) and (minuto_agora < minuto + 5) and (hora == hora_agora)):
-                       bloqueado = True
-                    elif ((clientIp == ip) and (hora_agora == hora + 1) and (((minuto + 5)/60)) == minuto_agora):
-                        bloqueado = True
-
+                # Resposta ao proxy
+                msg = ""
                 if (negado):
-                    msg = "Sua requisição foi negada"
-                    self.connection.send(msg.encode())
-                    self.connection.close()
-
-                elif (bloqueado):
-                   
-                    msg = "Sua requisição foi negada"
-                    self.connection.send(msg.encode())
-                    self.connection.close()
-
+                    msg = "FORBIDDEN"
                 else:
-
-                    hora = int(elemento.split(':')[0])
-                    
-                    for h in horas_proibidas:
-                        if ( hora == h):
-                            msg = "Sua requisição foi negada"
-                            self.connection.send(msg.encode())
-                            self.connection.close()
-
-
-
-                    for item in clientes_conectados:
-
-                        horas = []
-                        minutos = []
-                        segundos = []
-
-                        for elemento in clientes_conectados[item]:
-
-                            hora = int(elemento.split(':')[0])
-                            minuto = int(elemento.split(':')[1])
-                            segundo = int(elemento.split(':')[2])
-
-                            horas.append(hora)
-                            minutos.append(minuto)
-                            segundos.append(segundo)
-
-                        
-                        cont = 0; 
-                        for i in xrange(0,len(horas)):
-                            
-                            if((horas[i] == horas[i+1]) and (minutos[i] == minutos[i+1]) and ((i+1) <= len(horas))):
-                                cont++gg
-                        
-                        if (cont >= 10):
-                            clientes_bloqueados[item] = str(now).split(" ")[1]
-                            msg = "Sua requisição foi negada"
-                            self.connection.send(msg.encode())
-                            self.connection.close()   
-                             
-                        else: 
-                            # Repassa mensagem ao servidor (adicionar funcionalidade aqui)
-                            serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            serverSocket.connect((self.serverIP, self.serverPort))
-                            serverSocket.sendall(message)
-
-                            # Recebe resposta do servidor e repassa ao usuario
-                            response = serverSocket.recv(self.size)
-                            self.connection.sendall(response)
+                    msg = "ALLOWED"
+                
+                connection.sendall(msg.encode())
 
             # Se não recebeu cancela a conexão
             else:
@@ -174,5 +92,5 @@ class ClientConnection(Thread):
                 break
 
 if __name__ == "__main__":
-    s = ClientListener()
-    s.start_listening()
+    fw = FirewallServer()
+    fw.start_listening()

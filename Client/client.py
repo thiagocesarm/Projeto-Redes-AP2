@@ -3,8 +3,8 @@ import socket
 import json
 
 #           Firewall
-#              ^
-#              |			
+#              ^|
+#              |v            
 # cliente -> proxy -> servidor
 
 HOST = '127.0.0.1'     # Server IP

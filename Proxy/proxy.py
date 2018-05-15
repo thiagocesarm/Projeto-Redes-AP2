@@ -6,8 +6,8 @@ import json
 import urllib2
 
 #           Firewall
-#              ^
-#              |			
+#              ^|
+#              |v            
 # cliente -> proxy -> servidor
 
 # Serve como um servidor para o proxy, mantém as conexões vindas dos clientes
