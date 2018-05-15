@@ -17,7 +17,7 @@ print('Connecting...\n')
 # Enquanto o usuário não escolher a opção de fechar a conexão
 while True:
 	# Recebe o funcionalidade a ser executada 
-	msg = raw_input('Choose the functionality: \n Write "time" to get the time of the moment \n Write "server-visits" to get the number of visitors \n Write "http" to make an http request \n\n Write "close" to close connection \n\n')
+	msg = raw_input('Choose the functionality: \n Write "time" to get the currente date and time \n Write "server-reqs" to get the number of requests made to the server \n Write "http" to make an http request \n\n Write "close" to close connection \n\n')
 	body = ''
 	
 	# Se não for escolhido a opção de fechar conexão
