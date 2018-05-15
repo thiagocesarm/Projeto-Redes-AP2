@@ -92,6 +92,7 @@ class ClientConnection(Thread):
 					if service == "http":
 						url = json_data["body"]
 						contents = urllib2.urlopen(url).read()
+
 						json_response = {
 							"type" : "response",
 							"service" : "http",

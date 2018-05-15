@@ -36,7 +36,10 @@ while True:
 	    print('\nMessage sent')
 
 	    # Recebe e decodifica a mensagem em JSON  do servidor
-	    response = json.loads(s.recv(SIZE))
+	    if msg == 'http':
+	    	response = json.loads(s.recv(100000))
+	    else:
+	    	response = json.loads(s.recv(SIZE))
 	    print('Response: '+response['body']+' \n')
 	else:
 		print('Closing connection...')
