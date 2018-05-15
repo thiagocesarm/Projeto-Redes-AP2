@@ -102,6 +102,8 @@ class ClientConnection(Thread):
                     
                     if((clientIp == ip) and (minuto_agora < minuto + 5) and (hora == hora_agora)):
                        bloqueado = True
+                    elif ((clientIp == ip) and (hora_agora == hora + 1) and (((minuto + 5)/60)) == minuto_agora):
+                        bloqueado = True
 
                 if (negado):
                     msg = "Sua requisição foi negada"
@@ -130,7 +132,7 @@ class ClientConnection(Thread):
 
                         horas = []
                         minutos = []
-                        segundos[]
+                        segundos = []
 
                         for elemento in clientes_conectados[item]:
 
