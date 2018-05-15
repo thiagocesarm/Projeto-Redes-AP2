@@ -71,34 +71,41 @@ class ClientConnection(Thread):
 				# Espera resposta do firewall
 				message = self.firewallConnection.recv(self.size)
 
-				# Se recusado pelo firewall, retorne
-				# TODO
+				# Se recusado pelo firewall, retorne mensagem de conexão negado para o usuário
+				if message == "FORBIDDEN":
+					json_response = {
+							"type" : "response",
+							"service" : "",
+							"body" : "Access denied! Connections on your IP was blocked by the firewall!"
+						}
+						self.connection.sendall(json.dumps(json_response))
 
 				# Se não recusado, continue
-				json_data = json.loads(message)
-				service = json_data["service"]
-				
-				# Verifica o tipo em busca de uma requisição HTTP
-				if service == "http":
-					url = json_data["body"]
-					contents = urllib2.urlopen(url).read()
-					json_response = {
-						"type" : "response",
-						"service" : "http",
-						"body" : contents
-					}
-					self.connection.sendall(json.dumps(json_response))
 				else:
-					# Repassa mensagem ao servidor
-					serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-					serverSocket.connect((self.serverIP, self.serverPort))
-					serverSocket.sendall(message)
+					json_data = json.loads(clientMessage)
+					service = json_data["service"]
+					
+					# Verifica o tipo em busca de uma requisição HTTP
+					if service == "http":
+						url = json_data["body"]
+						contents = urllib2.urlopen(url).read()
+						json_response = {
+							"type" : "response",
+							"service" : "http",
+							"body" : contents
+						}
+						self.connection.sendall(json.dumps(json_response))
+					else:
+						# Repassa mensagem ao servidor
+						serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+						serverSocket.connect((self.serverIP, self.serverPort))
+						serverSocket.sendall(message)
 
-					# Recebe resposta do servidor e repassa ao usuario
-					response = serverSocket.recv(self.size)
-					self.connection.sendall(response)
+						# Recebe resposta do servidor e repassa ao usuario
+						response = serverSocket.recv(self.size)
+						self.connection.sendall(response)
 
-				# Se não recebeu cancela a conexão
+			# Se não recebeu, cancela a conexão
 			else:
 				self.connection.close()
 				break
