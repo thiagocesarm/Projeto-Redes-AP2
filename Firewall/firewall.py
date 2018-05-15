@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import socket
-from threading import Thread
 from datetime import datetime
 import sys
 
@@ -42,6 +41,7 @@ class FirewallServer:
         while True:
             # Recebe a mensagem do proxy
             clientIp = connection.recv(self.size)
+            print "Ip do cliente: ", clientIp
 
             # Se recebeu
             if clientIp:
@@ -52,6 +52,7 @@ class FirewallServer:
                 # Se não tiver se conectado antes, cria a entrada
                 if clientIp not in self.clientes_conectados:
                     self.clientes_conectados[clientIp] = []
+                    print "primeira conexão de ", clientIp
                 self.clientes_conectados[clientIp].append(now)
 
                 negado = False
@@ -61,6 +62,7 @@ class FirewallServer:
 
                 # Se estiver bloqueado temporariamente a menos de 5 minutos
                 if clientIp in self.clientes_bloqueados:
+                    print "valor debug ", (now - self.clientes_bloqueados[clientIp]).total_seconds()
                     if (now - self.clientes_bloqueados[clientIp]).total_seconds() < 300:
                         negado = True
                     else:
@@ -71,9 +73,11 @@ class FirewallServer:
                 numConnecs = 0
                 for timestamp in self.clientes_conectados[clientIp]:
                     if ((now - timestamp).total_seconds() < 5):
-                        if (++numConnecs >= 10):
+                        numConnecs += 1
+                        if (numConnecs >= 10):
                             break
                 if (numConnecs >= 10):
+                    print "blockeado"
                     self.clientes_bloqueados[clientIp] = now
                     negado = True
 

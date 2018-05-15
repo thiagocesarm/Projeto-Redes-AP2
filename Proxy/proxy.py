@@ -61,13 +61,16 @@ class ClientConnection(Thread):
 
 	def run(self):
 		# Loop infinito até o cliente desconectar
+		serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		serverSocket.connect((self.serverIP, self.serverPort))
+
 		while True:
 			# Recebe a mensagem do cliente
 			clientMessage = self.connection.recv(self.size)
 
 			if clientMessage:
 				# Transmite a mensagem ao firewall
-				firewallConnection.sendall(clientMessage)
+				firewallConnection.sendall(self.address[0])
 				# Espera resposta do firewall
 				message = firewallConnection.recv(self.size)
 
@@ -76,7 +79,7 @@ class ClientConnection(Thread):
 					json_response = {
 							"type" : "response",
 							"service" : "",
-							"body" : "Access denied! Connections on your IP was blocked by the firewall!"
+							"body" : "Access denied! Connections from your IP have been blocked by the firewall!"
 						}
 					self.connection.sendall(json.dumps(json_response))
 
@@ -97,8 +100,6 @@ class ClientConnection(Thread):
 						self.connection.sendall(json.dumps(json_response))
 					else:
 						# Repassa mensagem ao servidor
-						serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-						serverSocket.connect((self.serverIP, self.serverPort))
 						serverSocket.sendall(clientMessage)
 
 						# Recebe resposta do servidor e repassa ao usuario

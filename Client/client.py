@@ -38,13 +38,6 @@ while True:
 	    # Recebe e decodifica a mensagem em JSON  do servidor
 	    response = json.loads(s.recv(SIZE))
 	    print('Response: '+response['body']+' \n')
-
-	    resp = raw_input('Continue? (y/n): ')
-	    
-	    if resp == 'n':
-	    	print('Closing connection...')
-	    	break
-
 	else:
 		print('Closing connection...')
 		break
