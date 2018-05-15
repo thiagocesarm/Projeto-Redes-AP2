@@ -4,7 +4,7 @@ import json
 # cliente -> firewall -> proxy -> servidor
 
 HOST = '127.0.0.1'     # Server IP
-PORT = 11002           # Server port
+PORT = 11000           # Server port
 SIZE = 1024			   # Buffer size
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

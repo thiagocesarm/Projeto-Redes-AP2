@@ -19,7 +19,7 @@ while True:
         msg = con.recv(SIZE)
         if not msg: break
         print client, msg
-        con.send('{"type" : "response", "service" : "test", "body" : "test"}')
+        con.send('Message received!')
 
     print 'Closing connection with client ', client
     con.close()
